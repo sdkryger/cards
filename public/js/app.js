@@ -1967,8 +1967,8 @@ __webpack_require__.r(__webpack_exports__);
         'background-color': fillColor,
         'width': this.cardWidth + 'px',
         'height': this.cardHeight + 'px',
-        'top': this.tableHeight * card.yPos - this.cardHeight / 2 + 'px',
-        'left': this.tableWidth * card.xPos - this.cardWidth / 2 + 'px'
+        'top': (this.tableHeight - this.cardHeight) * card.yPos + 'px',
+        'left': (this.tableWidth - this.cardWidth) * card.xPos + 'px'
       };
     },
     shuffleCards: function shuffleCards() {
