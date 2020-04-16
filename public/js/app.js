@@ -1938,6 +1938,15 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+function drag2(event) {
+  console.log("now dragging");
+}
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -1950,8 +1959,18 @@ __webpack_require__.r(__webpack_exports__);
       tableWidth: '',
       tableHeight: 400,
       cardWidth: 60,
-      cardHeight: 60
+      cardHeight: 60,
+      dragStartPos: {},
+      currentCard: {}
     };
+  },
+  computed: {
+    moveWidth: function moveWidth() {
+      return this.tableWidth - this.cardWidth;
+    },
+    moveHeight: function moveHeight() {
+      return this.tableHeight - this.cardHeight;
+    }
   },
   methods: {
     addPlayer: function addPlayer() {
@@ -1971,6 +1990,58 @@ __webpack_require__.r(__webpack_exports__);
         'left': (this.tableWidth - this.cardWidth) * card.xPos + 'px'
       };
     },
+    dragStart: function dragStart(card, event) {
+      console.log("start of drag... " + card.value + " of " + card.suit);
+      console.log(event.clientX);
+      this.dragStartPos = {
+        x: event.clientX,
+        y: event.clientY
+      };
+      this.currentCard = card;
+    },
+    dragging: function dragging(card, event) {//console.log("dragging x: "+event.pageX);
+      //console.log("Dragging now...");
+      //console.log(JSON.stringify(event.target));
+    },
+    dragOver: function dragOver(event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+    },
+    drop: function drop(event) {
+      event.preventDefault();
+      var id = event.target.id;
+      console.log("id: " + event.target.id + ", x: " + event.clientX);
+      var deltaX = (event.clientX - this.dragStartPos.x) / this.moveWidth;
+      var newX = this.currentCard.xPos + deltaX;
+      if (newX < 0) newX = 0;
+      if (newX > 1) newX = 1;
+      this.currentCard.xPos = newX;
+      var deltaY = (event.clientY - this.dragStartPos.y) / this.moveHeight;
+      var newY = this.currentCard.yPos + deltaY;
+      if (newY < 0) newY = 0;
+      if (newY > 1) newY = 1;
+      this.currentCard.yPos = newY;
+      var index = -1;
+
+      for (var i = 0; i < this.cardsOnTable.length; i++) {
+        if (id == this.cardsOnTable[i].id) index = i;
+      }
+
+      if (index != -1) {
+        this.cardsOnTable.splice(index, 1);
+        this.cardsOnTable.push(this.currentCard);
+      }
+    },
+    flip: function flip(card) {
+      console.log("going to try to flip the card with id: " + card.id);
+      /*
+      for(var i=0;i<this.cardsOnTable.length;i++){
+        if(this.cardsOnTable[i].id == card.id)
+          this.cardsOnTable[i].facingUp =
+      }*/
+
+      card.facingUp = !card.facingUp;
+    },
     shuffleCards: function shuffleCards() {
       var temp = this.cardsOnTable;
       this.cardsOnTable = [];
@@ -1983,6 +2054,8 @@ __webpack_require__.r(__webpack_exports__);
     },
     start: function start() {
       //alert("Should start now");
+      var serialNum = 0;
+
       for (var i = 0; i < 4; i++) {
         for (var j = 0; j < 13; j++) {
           this.cardsOnTable.push({
@@ -1990,8 +2063,10 @@ __webpack_require__.r(__webpack_exports__);
             value: this.values[j],
             xPos: 0.5,
             yPos: 0.5,
-            facingUp: false
+            facingUp: false,
+            id: serialNum
           });
+          serialNum++;
         }
       }
 
@@ -37653,7 +37728,13 @@ var render = function() {
       {
         ref: "table",
         staticClass: "col-12 bg-secondary",
-        staticStyle: { height: "400px" }
+        staticStyle: { height: "400px" },
+        on: {
+          dragend: _vm.drop,
+          dragover: function($event) {
+            return _vm.dragOver($event)
+          }
+        }
       },
       [
         _vm._v("\n    Table surface\n    \n    "),
@@ -37664,30 +37745,70 @@ var render = function() {
               staticClass:
                 "d-flex justify-content-between border border-dark rounded p-1",
               staticStyle: { position: "absolute" },
-              style: _vm.cardStyle(card)
+              style: _vm.cardStyle(card),
+              attrs: { draggable: "true", id: card.id },
+              on: {
+                dragstart: function($event) {
+                  return _vm.dragStart(card, $event)
+                },
+                drag: function($event) {
+                  return _vm.dragging(card, $event)
+                }
+              }
             },
             [
               card.facingUp
                 ? [
                     card.suit == "hearts"
-                      ? _c("img", { attrs: { src: "/images/hearts.png" } })
+                      ? _c("img", {
+                          staticStyle: { height: "30px" },
+                          attrs: { src: "/images/hearts.png" }
+                        })
                       : _vm._e(),
                     _vm._v(" "),
                     card.suit == "clubs"
-                      ? _c("img", { attrs: { src: "/images/clubs.png" } })
+                      ? _c("img", {
+                          staticStyle: { height: "30px" },
+                          attrs: { src: "/images/clubs.png" }
+                        })
                       : _vm._e(),
                     _vm._v(" "),
                     card.suit == "spades"
-                      ? _c("img", { attrs: { src: "/images/spades.png" } })
+                      ? _c("img", {
+                          staticStyle: { height: "30px" },
+                          attrs: { src: "/images/spades.png" }
+                        })
                       : _vm._e(),
                     _vm._v(" "),
                     card.suit == "diamonds"
-                      ? _c("img", { attrs: { src: "/images/diamonds.png" } })
+                      ? _c("img", {
+                          staticStyle: { height: "30px" },
+                          attrs: { src: "/images/diamonds.png" }
+                        })
                       : _vm._e(),
                     _vm._v(" "),
                     _c("span", [
                       _vm._v("\n          " + _vm._s(card.value) + "\n        ")
                     ])
+                  ]
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.currentCard.id == card.id
+                ? [
+                    _c("img", {
+                      staticStyle: {
+                        position: "absolute",
+                        bottom: "3px",
+                        right: "3px",
+                        width: "15px"
+                      },
+                      attrs: { src: "/images/flip.png" },
+                      on: {
+                        click: function($event) {
+                          return _vm.flip(card)
+                        }
+                      }
+                    })
                   ]
                 : _vm._e()
             ],
